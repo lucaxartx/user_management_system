@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express'
 import db from "../db/connect"
-
+import { log } from 'node:util'
 
 
 export const getUsers: RequestHandler =
@@ -50,7 +50,7 @@ export const getUserById: RequestHandler<{ id: String }> = async (req, res) => {
 
 
 export const createUser: RequestHandler = async (req, res) => {
-    const id = +(req.params)
+    const id = +(req.params.id)
     const { name, email } = req.body
 
     if (!name || !email) {
@@ -66,7 +66,6 @@ export const createUser: RequestHandler = async (req, res) => {
             res.status(400).json({ error: 'user with this ID already exists' });
         }
 
-
         const newUser = await db.user.create({
             data: {
                 id,
@@ -74,11 +73,12 @@ export const createUser: RequestHandler = async (req, res) => {
                 email,
             },
         });
-
-
         res.status(201).json(newUser);
     } catch (error) {
         console.error('Error :', error);
         res.status(500).json({ error: 'error occurred while creating  user' });
     }
 };
+
+
+
