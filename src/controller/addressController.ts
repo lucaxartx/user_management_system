@@ -53,3 +53,17 @@ export const updateAddress = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'An error occurred while updating the address.' });
     }
 };
+
+
+export const getAddress = async (req: Request, res: Response) => {
+    const userId = req.params.userId;
+    try {
+        const address = await prisma.address.findUnique({
+            where: { userId: parseInt(userId) },
+        });
+        res.status(200).json(address);
+    } catch (error) {
+        console.error('Error fetching address:', error);
+        res.status(500).json({ error: 'An error occurred while fetching the address.' });
+    }
+};
