@@ -1,69 +1,63 @@
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { RequestHandler } from 'express';
+import db from '../db/connect';
+import { CustomError } from '../errors/customError';
+import { StatusCodes } from 'http-status-codes';
 
-const prisma = new PrismaClient();
-
-/**
- * Create an address for a user
- */
-export const createAddress = async (req: Request, res: Response) => {
+export const createAddress: RequestHandler = async (req, res, next) => {
     // const userId = req.params.userId;
     const { street, city, userId } = req.body;
 
-    const findUser = await prisma.user.findUnique({
+    const findUser = await db.user.findUnique({
         where: { id: parseInt(userId) },
     })
     if (!findUser) {
-        res.status(400).json({ error: 'User not found' });
+        throw new CustomError('User not found', StatusCodes.NOT_FOUND);
+
     }
 
     try {
-        const address = await prisma.address.create({
+        const address = await db.address.create({
             data: {
                 street,
                 city,
                 userId: parseInt(userId),
             },
         });
-        console.log(address);
 
-        res.status(201).json(address);
+
+        res.status(StatusCodes.CREATED).json(address);
     } catch (error) {
-        console.error('Error creating address:', error);
-        res.status(500).json({ error: 'An error occurred while creating the address.' });
+        next(error)
     }
 };
 
-/**
- * Update an address for a user
- */
-export const updateAddress = async (req: Request, res: Response) => {
+
+export const updateAddress: RequestHandler = async (req, res, next) => {
     const userId = req.params.userId;
     const { street, city } = req.body;
 
     try {
-        const address = await prisma.address.update({
+        const address = await db.address.update({
             where: { userId: parseInt(userId) },
             data: { street, city },
         });
 
         res.status(200).json(address);
     } catch (error) {
-        console.error('Error updating address:', error);
-        res.status(500).json({ error: 'An error occurred while updating the address.' });
+        next(error)
+
     }
 };
 
 
-export const getAddress = async (req: Request, res: Response) => {
+export const getAddress: RequestHandler = async (req, res, next) => {
     const userId = req.params.userId;
     try {
-        const address = await prisma.address.findUnique({
+        const address = await db.address.findUnique({
             where: { userId: parseInt(userId) },
         });
-        res.status(200).json(address);
+        res.status(StatusCodes.OK).json(address);
     } catch (error) {
-        console.error('Error fetching address:', error);
-        res.status(500).json({ error: 'An error occurred while fetching the address.' });
+        next(error)
     }
 };

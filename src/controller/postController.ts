@@ -1,16 +1,13 @@
-import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Request, RequestHandler, Response, NextFunction } from 'express';
+import { CustomError } from '../errors/customError';
+import { StatusCodes } from 'http-status-codes';
+import db from '../db/connect';
 
-const prisma = new PrismaClient();
-
-/**
- * Create a post for a user
- */
-export const createPost = async (req: Request, res: Response) => {
+export const createPost: RequestHandler = async (req, res, next) => {
     const { title, body, userId } = req.body;
 
     try {
-        const post = await prisma.post.create({
+        const post = await db.post.create({
             data: {
                 title,
                 body,
@@ -18,29 +15,48 @@ export const createPost = async (req: Request, res: Response) => {
             },
         });
 
-        res.status(201).json(post);
+        res.status(StatusCodes.CREATED).json(post);
     } catch (error) {
-        console.error('Error creating post:', error);
-        res.status(500).json({ error: 'An error occurred while creating the post.' });
+        next(error);
     }
 };
 
-/**
- * Get all posts for a user
- */
-export const getPostsByUserId = async (req: Request, res: Response) => {
+
+export const getPostsByUserId: RequestHandler = async (req, res, next) => {
     const userId = +(req.query.userId as string);
 
-    // console.log('userId:::::::', userId, "::::::");
     try {
-        const posts = await prisma.post.findMany({
+        const posts = await db.post.findMany({
             where: { userId },
         });
 
-
-        res.status(200).json(posts);
+        res.status(StatusCodes.OK).json(posts);
     } catch (error) {
-        console.error('Error fetching posts:', error);
-        res.status(500).json({ error: 'An error occurred while fetching posts.' });
+        next(error);
+    }
+};
+
+
+export const deletePost: RequestHandler = async (req, res, next) => {
+    const id = +(req.params.id);
+
+    try {
+        const post = await db.post.findUnique({
+            where: { id },
+        });
+
+        if (!post) {
+            throw new CustomError(`Post with id:${id} not found`, StatusCodes.NOT_FOUND);
+        }
+
+        await db.post.delete({
+            where: { id },
+        });
+
+        res.status(StatusCodes.OK).json({
+            message: `Post with id:${id} deleted successfully`,
+        });
+    } catch (error) {
+        next(error);
     }
 };
