@@ -1,22 +1,21 @@
 import express, { RequestHandler } from 'express';
-import { createPost, getPostsByUserId } from '../controller/postController';
+import { createPost, getPostsByUserId, deletePost } from '../controller/postController';
 import { createPostSchema } from '../validators/postValidator';
 import { validateRequest } from '../middleware/validateRequest.ts';
 import Joi from 'joi';
 const router = express.Router();
 
-// POST /posts
 router.post(
     '/post',
-    validateRequest(createPostSchema), // Validate the request body
+    validateRequest(createPostSchema),
     createPost
 );
 
-// GET /posts?userId={userId}
+
 router.get(
     '/post',
     (req, res, next) => {
-        // Validate the userId query parameter
+
         const { error } = Joi.object({
             userId: Joi.number().integer().positive().required(),
         }).validate({ userId: req.query.userId });
@@ -32,5 +31,6 @@ router.get(
     },
     getPostsByUserId
 );
+router.delete('/posts/:id', deletePost)
 
 export default router;
