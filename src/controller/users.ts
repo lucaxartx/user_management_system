@@ -1,10 +1,11 @@
 import { RequestHandler } from 'express'
 import db from "../db/connect"
-import { log } from 'node:util'
-
+import { CustomError } from '../errors/customError'
+import { StatusCodes } from 'http-status-codes'
+import { stat } from 'fs'
 
 export const getUsers: RequestHandler =
-    async (req, res) => {
+    async (req, res, next) => {
         const page = +(req.query.page as string) || 1
         const pgSize = +(req.query.pgSize as string) || 10
 
@@ -12,29 +13,31 @@ export const getUsers: RequestHandler =
             const users = await db.user.findMany({
                 skip: (page - 1) * pgSize,
                 take: pgSize,
+                include: {
+                    address: true,
+                    posts: true
+                }
             });
 
-            res.status(200).json(users);
+            res.status(StatusCodes.OK).json(users);
         } catch (error) {
-            console.error(error);
-            res.status(400).json({ error: 'error fetching users' });
+            next(error)
         }
     }
 
-export const userCount: RequestHandler = async (req, res) => {
+export const userCount: RequestHandler = async (req, res, next) => {
     try {
         const count = await db.user.count()
-        res.status(200).json({ count })
+        res.status(StatusCodes.OK).json({ count })
     } catch (error) {
-        console.error(error);
-        res.status(400).json({ error: ' error fetching user count' });
+        next(error)
     }
 }
 
-export const getUserById: RequestHandler<{ id: String }> = async (req, res) => {
+export const getUserById: RequestHandler<{ id: String }> = async (req, res, next) => {
     const id = +(req.params.id)
     if (!id) {
-        res.status(400).json({ error: 'please provide user id' })
+        return next(new CustomError('Please provide user id', StatusCodes.BAD_REQUEST));
     }
     const user = await db.user.findFirst(
         {
@@ -44,17 +47,20 @@ export const getUserById: RequestHandler<{ id: String }> = async (req, res) => {
             }
         }
     )
-    res.status(200).json({ user })
+    if (!user) {
+        throw new CustomError('User not found', StatusCodes.NOT_FOUND); // Custom error for user not found
+    }
+    res.status(StatusCodes.OK).json({ user })
 
 }
 
 
-export const createUser: RequestHandler = async (req, res) => {
+export const createUser: RequestHandler = async (req, res, next): Promise<void> => {
     const id = +(req.params.id)
     const { name, email } = req.body
 
     if (!name || !email) {
-        res.status(400).json({ error: 'please provide name and email' })
+        return next(new CustomError('Please provide name and email', StatusCodes.BAD_REQUEST));
     }
 
     try {
@@ -63,7 +69,7 @@ export const createUser: RequestHandler = async (req, res) => {
         });
 
         if (existingUser) {
-            res.status(400).json({ error: 'user with this ID already exists' });
+            return next(new CustomError('User with this email already exists', StatusCodes.CONFLICT));
         }
 
         const newUser = await db.user.create({
@@ -73,10 +79,9 @@ export const createUser: RequestHandler = async (req, res) => {
                 email,
             },
         });
-        res.status(201).json(newUser);
+        res.status(StatusCodes.CREATED).json(newUser);
     } catch (error) {
-        console.error('Error :', error);
-        res.status(500).json({ error: 'error occurred while creating  user' });
+        next(error)
     }
 };
 
