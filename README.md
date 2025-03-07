@@ -113,3 +113,93 @@ Response
   "count": 5
 }
 
+
+GET /users - Get a list of users
+
+Response:
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  {
+    "id": 2,
+    "name": "Jane Doe",
+    "email": "jane@example.com"
+  }
+]
+
+
+POST /users/:id - Create a new user
+
+Request Body
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com"
+}
+Response:
+{
+  "id": 2,
+  "name": "John Doe",
+  "email": "john.doe@example.com"
+}
+
+Address Routes
+GET /address/:id - Get an address by ID
+
+{
+  "address": {
+    "id": 1,
+    "street": "123 Main St",
+    "city": "Anytown",
+    "state": "CA",
+    "zip": "12345"
+  }
+}
+
+POST /address - Create a new address
+
+Request Body:
+{
+  "street": "123 Main St",
+  "city": "Anytown",
+  "state": "CA",
+  "zip": "12345"
+}
+
+Response:
+{
+  "id": 1,
+  "street": "123 Main St",
+  "city": "Anytown",
+  "state": "CA",
+  "zip": "12345"
+}
+
+Post Routes
+GET /post/:id - Get a post by ID
+
+Response:
+{
+  "post": {
+    "id": 1,
+    "title": "My First Post",
+    "content": "This is the content of my first post."
+  }
+}
+
+POST /post - Create a new post
+
+Request Body:
+{
+  "title": "My First Post",
+  "content": "This is the content of my first post."
+}
+
+Response:
+{
+  "id": 1,
+  "title": "My First Post",
+  "content": "This is the content of my first post."
+}
