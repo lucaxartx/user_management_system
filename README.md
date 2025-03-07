@@ -92,3 +92,24 @@ user_management_system/
 └── [README.md](http://_vscodecontentref_/5)
 
 
+GET /user/:id - Get a user by ID
+
+Response:
+
+{
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
+}
+
+
+
+GET /users/count - Get the count of users
+
+Response
+{
+  "count": 5
+}
+
